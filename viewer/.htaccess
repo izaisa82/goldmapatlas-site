@@ -1,0 +1,20 @@
+RewriteEngine On
+RewriteRule ^viewer\.html$ viewer.php [L]
+
+# Deep Zoom descriptors are XML; without this Apache serves .dzi as an unknown
+# type and some browsers hand OpenSeadragon a null responseXML.
+AddType application/xml .dzi
+
+# Tiles never change once generated - let the browser keep them.
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresByType image/jpeg "access plus 30 days"
+</IfModule>
+<IfModule mod_headers.c>
+  <FilesMatch "\.jpg$">
+    Header set Cache-Control "public, max-age=2592000, immutable"
+  </FilesMatch>
+</IfModule>
+
+# 50k+ tiny files per map - directory listings would be useless and slow.
+Options -Indexes
