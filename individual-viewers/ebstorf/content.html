@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="robots" content="noindex, nofollow">
+<title>Ebstorf Mappa Mundi (1300) — GoldMapAtlas</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/openseadragon/5.0.1/openseadragon.min.js"></script>
+<style>
+  :root{
+    --bg:#14110e; --panel:rgba(28,24,20,.86); --line:rgba(230,215,190,.16);
+    --ink:#efe6d7; --muted:#a29684; --accent:#e0a86d;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);
+    font:14px/1.45 ui-sans-serif,system-ui,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    overflow:hidden;-webkit-font-smoothing:antialiased}
+  #osd{position:absolute;inset:0;background:var(--bg)}
+
+  .panel{position:absolute;z-index:20;background:var(--panel);border:1px solid var(--line);
+    border-radius:12px;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    box-shadow:0 8px 30px rgba(0,0,0,.45)}
+
+  #top{top:14px;left:14px;padding:10px 12px;max-width:min(560px,calc(100vw - 28px))}
+  #top h1{margin:0 0 1px;font-size:14px;font-weight:600;letter-spacing:.02em}
+  #top .era{font-size:11px;color:var(--muted)}
+  #attr{font-size:10.5px;line-height:1.4;color:var(--muted);margin:8px 0 0;
+    padding-top:8px;border-top:1px solid var(--line)}
+  #attr b{color:var(--accent);font-weight:600}
+  #note{font-size:10.5px;line-height:1.45;color:var(--muted);margin:6px 0 0;display:none}
+  #note em{color:#d8c9a8;font-style:normal}
+
+  #sheets{margin-top:8px;padding-top:8px;border-top:1px solid var(--line);display:none}
+  #sheets .lbl{font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;
+    color:var(--muted);margin-bottom:5px}
+  #sheetgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+  .sh{appearance:none;border:1px solid var(--line);background:transparent;color:var(--muted);
+    padding:5px 0;border-radius:6px;cursor:pointer;font:inherit;font-size:11px;
+    font-variant-numeric:tabular-nums;transition:.12s}
+  .sh:hover{color:var(--ink);border-color:rgba(230,215,190,.35)}
+  .sh[aria-selected="true"]{background:var(--accent);border-color:var(--accent);
+    color:#1d1509;font-weight:600}
+
+  #ctrl{left:14px;bottom:14px;padding:6px;display:flex;gap:4px}
+  .btn{appearance:none;border:0;background:transparent;color:var(--ink);width:36px;height:36px;
+    border-radius:8px;cursor:pointer;font-size:15px;display:grid;place-items:center;
+    transition:.12s;font-family:inherit}
+  .btn:hover{background:rgba(230,215,190,.12)}
+  .btn:active{transform:scale(.93)}
+  .btn.wide{width:auto;padding:0 11px;font-size:12px;letter-spacing:.02em}
+  .sep{width:1px;background:var(--line);margin:5px 2px}
+  .backlink{display:inline-block;margin:0 0 8px;padding:4px 10px;border:1px solid var(--line);
+    border-radius:7px;color:var(--muted);text-decoration:none;font-size:11px;letter-spacing:.02em;
+    transition:.12s}
+  .backlink:hover{color:var(--ink);border-color:rgba(230,215,190,.35);background:rgba(230,215,190,.08)}
+
+  #hud{right:14px;bottom:14px;padding:8px 12px;font-variant-numeric:tabular-nums;font-size:12px;
+    display:flex;gap:14px;align-items:center}
+  #hud b{font-weight:600;color:var(--accent)}
+  #hud .lbl{color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.08em;
+    display:block;margin-bottom:1px}
+  #native{color:var(--muted)}
+  #native.on{color:#9ecf9a}
+
+  #msg{position:absolute;inset:0;z-index:30;display:none;place-items:center;
+    background:rgba(20,17,14,.92);text-align:center;padding:24px}
+  #msg.show{display:grid}
+  #msg h2{margin:0 0 8px;font-size:16px}
+  #msg p{margin:0;color:var(--muted);font-size:13px;max-width:520px}
+  #msg code{background:rgba(230,215,190,.1);padding:2px 6px;border-radius:5px;font-size:12px}
+
+  #load{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:25;
+    color:var(--muted);font-size:12px;letter-spacing:.06em;text-transform:uppercase;
+    transition:opacity .3s;pointer-events:none}
+  #load.hide{opacity:0}
+
+  #help{position:absolute;right:14px;top:14px;z-index:20}
+  #helpbtn{width:32px;height:32px;border-radius:50%;border:1px solid var(--line);
+    background:var(--panel);color:var(--muted);cursor:pointer;font:inherit}
+  #helpbtn:hover{color:var(--ink)}
+  #keys{position:absolute;right:0;top:40px;width:236px;padding:12px 14px;display:none}
+  #keys.show{display:block}
+  #keys dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:5px 12px;font-size:12px}
+  #keys dt{color:var(--accent);font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px}
+  #keys dd{margin:0;color:var(--muted)}
+
+  @media (max-width:680px){
+    #top{padding:8px 10px} #attr{font-size:9.5px}
+    #hud{gap:10px;padding:6px 9px} #hud .grp:nth-child(3){display:none}
+  }
+</style>
+</head>
+<body>
+
+<div id="osd"></div>
+<div id="load">Loading tiles…</div>
+
+<div id="top" class="panel">
+  <a href="../../viewer/index.html" class="backlink">← All Maps</a>
+  <h1 id="ttl"></h1>
+  <div class="era" id="era"></div>
+  <div id="sheets"><div class="lbl"></div><div id="sheetgrid"></div></div>
+  <p id="attr"></p>
+  <p id="note"></p>
+</div>
+
+<div id="help">
+  <button id="helpbtn" title="Keyboard shortcuts">?</button>
+  <div id="keys" class="panel">
+    <dl>
+      <dt>drag</dt><dd>pan</dd>
+      <dt>wheel</dt><dd>zoom</dd>
+      <dt>dbl-click</dt><dd>zoom in</dd>
+      <dt>+ / −</dt><dd>zoom</dd>
+      <dt>← ↑ ↓ →</dt><dd>pan</dd>
+      <dt>0</dt><dd>fit to screen</dd>
+      <dt>1</dt><dd>100% (1:1 pixels)</dd>
+      <dt>r</dt><dd>rotate 180°</dd>
+      <dt>f</dt><dd>fullscreen</dd>
+    </dl>
+  </div>
+</div>
+
+<div id="ctrl" class="panel">
+  <button class="btn" id="zin"  title="Zoom in (+)">＋</button>
+  <button class="btn" id="zout" title="Zoom out (−)">－</button>
+  <div class="sep"></div>
+  <button class="btn wide" id="fit"  title="Fit to screen (0)">Fit</button>
+  <button class="btn wide" id="one"  title="100% — one screen pixel per scan pixel (1)">1:1</button>
+  <div class="sep"></div>
+  <button class="btn" id="rot" title="Rotate 180° (r)">⟳</button>
+  <button class="btn" id="fs"  title="Fullscreen (f)">⛶</button>
+</div>
+
+<div id="hud" class="panel">
+  <div class="grp"><span class="lbl">Zoom</span><b id="zoom">—</b></div>
+  <div class="grp"><span class="lbl">Detail</span><span id="native">—</span></div>
+  <div class="grp"><span class="lbl">Source</span><span id="dims">—</span></div>
+</div>
+
+<div id="msg"><div>
+  <h2 id="msgh">Tiles not found</h2>
+  <p id="msgp"></p>
+</div></div>
+
+<script>
+(function () {
+  "use strict";
+
+  // This page is scoped to one map. Its record is inlined rather than loaded from the
+  // bundle's maps.js, so nothing here can reach the other maps in the collection.
+  var MAP = {
+  "id": "ebstorf",
+  "dzi": "../../viewer/ebstorf.dzi",
+  "title": "Ebstorf Mappa Mundi",
+  "era": "c. 1300 · from the 1898 facsimile",
+  "attribution": "Public domain (PD-Art) — Leuphana University Lüneburg, EbsKart project",
+  "w": 7849,
+  "h": 7798,
+  "mp": 61.2,
+  "source": "Ebstorf_Weltkarte_Leuphana.jpg"
+};
+
+  var $ = function (id) { return document.getElementById(id); };
+  var viewer = null, sheet = 0, restoring = null;
+
+  function isMulti() { return !!(MAP.sheets && MAP.sheets.length); }
+  function activeSource() { return isMulti() ? MAP.sheets[sheet].dzi : MAP.dzi; }
+  function activeDims() {
+    return isMulti() ? [MAP.sheets[sheet].w, MAP.sheets[sheet].h] : [MAP.w, MAP.h];
+  }
+  function esc(s) {
+    return String(s).replace(/[&<>"]/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+    });
+  }
+
+  // Same label format as the combined viewer's tabs: first year found in the era line.
+  var yearMatch = MAP.era && MAP.era.match(/\\d{3,4}/);
+  var yearLabel = yearMatch ? " (" + yearMatch[0] + ")" : "";
+
+  // ---------- deep link ----------------------------------------------------
+  function readHash() {
+    var h = location.hash.replace(/^#/, "");
+    if (!h) return null;
+    var o = {};
+    h.split("&").forEach(function (kv) {
+      var p = kv.split("=");
+      if (p.length === 2) o[p[0]] = decodeURIComponent(p[1]);
+    });
+    return o;
+  }
+  var hashTimer = null;
+  function writeHash() {
+    if (!viewer || !viewer.world.getItemCount()) return;
+    clearTimeout(hashTimer);
+    hashTimer = setTimeout(function () {
+      var c = viewer.viewport.getCenter(true);
+      var z = viewer.viewport.getZoom(true);
+      history.replaceState(null, "", "#" + (isMulti() ? "s=" + sheet + "&" : "") +
+        "x=" + c.x.toFixed(5) + "&y=" + c.y.toFixed(5) + "&z=" + z.toFixed(4));
+    }, 320);
+  }
+
+  // ---------- hud ----------------------------------------------------------
+  function updateHud() {
+    if (!viewer || !viewer.world.getItemCount()) return;
+    var item = viewer.world.getItemAt(0);
+    var imgZoom = item.viewportToImageZoom(viewer.viewport.getZoom(true));
+    var pct = imgZoom * 100;
+    $("zoom").textContent = pct >= 100 ? pct.toFixed(0) + "%"
+                          : pct >= 10  ? pct.toFixed(1) + "%"
+                                       : pct.toFixed(2) + "%";
+    var n = $("native");
+    if (imgZoom >= 0.995) { n.textContent = "full scan detail"; n.className = "on"; }
+    else { n.textContent = "1 px ≈ " + (1 / imgZoom).toFixed(1) + " scan px"; n.className = ""; }
+  }
+
+  function ensureSized(refit) {
+    if (!viewer || !viewer.isOpen()) return false;
+    var r = $("osd").getBoundingClientRect();
+    var cs = viewer.viewport.getContainerSize();
+    if (r.width < 2 || Math.abs(cs.x - r.width) < 1) return false;
+    viewer.viewport.resize(new OpenSeadragon.Point(r.width, r.height), !refit);
+    if (refit) viewer.viewport.goHome(true);
+    viewer.forceRedraw();
+    updateHud();
+    return true;
+  }
+
+  // ---------- loading ------------------------------------------------------
+  function load(sheetIdx, view) {
+    if (isMulti()) sheet = Math.min(Math.max(sheetIdx || 0, 0), MAP.sheets.length - 1);
+    restoring = view || null;
+
+    $("ttl").textContent = MAP.title + yearLabel;
+    $("era").textContent = MAP.era;
+    $("attr").innerHTML = "<b>" + esc(MAP.title) + "</b> · " + esc(MAP.attribution);
+    if (MAP.note) $("note").innerHTML = "<em>Why it is not one image:</em> " + esc(MAP.note);
+    var d = activeDims();
+    $("dims").textContent = d[0].toLocaleString() + " × " + d[1].toLocaleString();
+    if (isMulti()) markSheets();
+    $("load").classList.remove("hide");
+    $("msg").classList.remove("show");
+
+    if (!viewer) {
+      viewer = OpenSeadragon({
+        id: "osd",
+        prefixUrl: "",
+        showNavigationControl: false,
+        tileSources: activeSource(),
+        immediateRender: false,
+        imageLoaderLimit: 6,
+        maxZoomPixelRatio: 3,
+        minZoomImageRatio: 0.6,
+        visibilityRatio: 0.7,
+        constrainDuringPan: true,
+        springStiffness: 8,
+        animationTime: 0.9,
+        zoomPerScroll: 1.25,
+        gestureSettingsMouse: { clickToZoom: false, dblClickToZoom: true },
+        showNavigator: true,
+        navigatorPosition: "TOP_RIGHT",
+        navigatorHeight: 96,
+        navigatorWidth: 96,
+        navigatorAutoFade: false,
+        navigatorBackground: "#14110e",
+        navigatorBorderColor: "rgba(230,215,190,.25)",
+        navigatorDisplayRegionColor: "#e0a86d"
+      });
+      viewer.addHandler("open", onOpen);
+      viewer.addHandler("open-failed", onFail);
+      viewer.addHandler("zoom", updateHud);
+      viewer.addHandler("animation", updateHud);
+      viewer.addHandler("animation-finish", function () { updateHud(); writeHash(); });
+      viewer.addHandler("pan", writeHash);
+    } else {
+      viewer.open(activeSource());
+    }
+  }
+
+  function markSheets() {
+    Array.prototype.forEach.call(document.querySelectorAll(".sh"), function (b, i) {
+      b.setAttribute("aria-selected", i === sheet ? "true" : "false");
+    });
+  }
+
+  function onOpen() {
+    $("load").classList.add("hide");
+    var hasView = restoring && isFinite(restoring.x) && isFinite(restoring.z);
+    viewer.viewport.setRotation(0);
+    ensureSized(!hasView);
+    if (hasView) {
+      viewer.viewport.zoomTo(restoring.z, null, true);
+      viewer.viewport.panTo(new OpenSeadragon.Point(restoring.x, restoring.y), true);
+    }
+    restoring = null;
+    updateHud();
+    writeHash();
+    requestAnimationFrame(function () { ensureSized(!hasView); });
+    setTimeout(function () {
+      ensureSized(false);
+      if (viewer.navigator) viewer.navigator.update(viewer.viewport);
+    }, 120);
+  }
+  window.addEventListener("load", function () { ensureSized(false); });
+
+  function onFail() {
+    $("load").classList.add("hide");
+    $("msgh").textContent = "Tiles for this map are not available";
+    $("msgp").innerHTML =
+      "Could not load <code>" + esc(activeSource()) + "</code>.<br><br>Either the tile pyramid " +
+      "has not been generated, or this page was opened straight from disk. Serve the folder " +
+      "over http (XAMPP) rather than via a <code>file://</code> URL.";
+    $("msg").classList.add("show");
+  }
+
+  // ---------- sheet picker (multi-sheet maps only) -------------------------
+  if (isMulti()) {
+    var grid = $("sheetgrid");
+    MAP.sheets.forEach(function (s, i) {
+      var b = document.createElement("button");
+      b.className = "sh";
+      b.textContent = String(i + 1);
+      b.title = s.label + " — " + s.w + " × " + s.h + " (" + s.mp + " MP)";
+      b.onclick = function () { if (i !== sheet) load(i); };
+      grid.appendChild(b);
+    });
+  }
+
+  // ---------- controls -----------------------------------------------------
+  function zoomBy(f) { viewer.viewport.zoomBy(f); viewer.viewport.applyConstraints(); }
+  function fit() { viewer.viewport.goHome(); }
+  function oneToOne() {
+    var item = viewer.world.getItemAt(0);
+    viewer.viewport.zoomTo(item.imageToViewportZoom(1));
+    viewer.viewport.applyConstraints();
+  }
+  $("zin").onclick = function () { zoomBy(1.6); };
+  $("zout").onclick = function () { zoomBy(1 / 1.6); };
+  $("fit").onclick = fit;
+  $("one").onclick = oneToOne;
+  $("rot").onclick = function () {
+    viewer.viewport.setRotation((viewer.viewport.getRotation() + 180) % 360);
+  };
+  $("fs").onclick = function () {
+    if (document.fullscreenElement) document.exitFullscreen();
+    else document.documentElement.requestFullscreen();
+  };
+  $("helpbtn").onclick = function () { $("keys").classList.toggle("show"); };
+
+  document.addEventListener("keydown", function (e) {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    var k = e.key;
+    if (k === "+" || k === "=") zoomBy(1.6);
+    else if (k === "-" || k === "_") zoomBy(1 / 1.6);
+    else if (k === "0") fit();
+    else if (k === "1") oneToOne();
+    else if (k === "r" || k === "R") $("rot").click();
+    else if (k === "f" || k === "F") $("fs").click();
+    else if (isMulti() && k === "[") load((sheet - 1 + MAP.sheets.length) % MAP.sheets.length);
+    else if (isMulti() && k === "]") load((sheet + 1) % MAP.sheets.length);
+    else return;
+    e.preventDefault();
+  });
+
+  // ---------- boot ---------------------------------------------------------
+  var h = readHash();
+  var startSheet = 0, view = null;
+  if (h) {
+    if (h.s) startSheet = parseInt(h.s, 10) || 0;
+    if (h.x && h.z) view = { x: parseFloat(h.x), y: parseFloat(h.y), z: parseFloat(h.z) };
+  }
+  load(startSheet, view);
+})();
+</script>
+</body>
+</html>
