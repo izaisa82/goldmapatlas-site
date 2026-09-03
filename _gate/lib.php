@@ -1,7 +1,8 @@
 <?php
 // Shared access-control library for GoldMapAtlas viewer gating.
 $__gateDir = __DIR__;
-define('GMA_PURCHASES_FILE', $__gateDir . '/purchases.json');
+define('GMA_PURCHASES_FILE', $__gateDir . '/purchases.php');
+define('GMA_DIE_GUARD', "<?php exit; ?>\n");
 
 function gma_config(): array {
     static $config = null;
@@ -15,6 +16,11 @@ function gma_normalize_email(string $email): string {
     return strtolower(trim($email));
 }
 
+function gma_strip_die_guard(string $raw): string {
+    $pos = strpos($raw, "?>\n");
+    return $pos === false ? $raw : substr($raw, $pos + 3);
+}
+
 function gma_load_purchases(): array {
     if (!file_exists(GMA_PURCHASES_FILE)) return [];
     $fp = fopen(GMA_PURCHASES_FILE, 'r');
@@ -23,7 +29,7 @@ function gma_load_purchases(): array {
     $raw = stream_get_contents($fp);
     flock($fp, LOCK_UN);
     fclose($fp);
-    $data = json_decode($raw, true);
+    $data = json_decode(gma_strip_die_guard($raw), true);
     return is_array($data) ? $data : [];
 }
 
@@ -34,7 +40,7 @@ function gma_record_purchase(string $email, string $productKod): void {
     if (!$fp) return;
     flock($fp, LOCK_EX);
     $raw = stream_get_contents($fp);
-    $data = json_decode($raw, true);
+    $data = json_decode(gma_strip_die_guard($raw), true);
     if (!is_array($data)) $data = [];
     if (!isset($data[$email]) || !is_array($data[$email])) $data[$email] = [];
     if (!in_array($productKod, $data[$email], true)) {
@@ -42,7 +48,7 @@ function gma_record_purchase(string $email, string $productKod): void {
     }
     ftruncate($fp, 0);
     rewind($fp);
-    fwrite($fp, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+    fwrite($fp, GMA_DIE_GUARD . json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
     fflush($fp);
     flock($fp, LOCK_UN);
     fclose($fp);

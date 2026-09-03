@@ -11,7 +11,8 @@ $raw = file_get_contents('php://input');
 $data = json_decode($raw, true);
 if (!is_array($data)) $data = $_POST;
 
-$logFile = __DIR__ . '/webhook-log.jsonl';
+$logFile = __DIR__ . '/webhook-log.php';
+if (!file_exists($logFile)) file_put_contents($logFile, "<?php exit; ?>\n");
 $fp = fopen($logFile, 'a');
 if ($fp) {
     flock($fp, LOCK_EX);

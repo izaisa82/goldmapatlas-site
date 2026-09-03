@@ -17,5 +17,5 @@ viewer/_build_summary.json
 
 # secrets / runtime data
 _gate/config.php
-_gate/purchases.json
-_gate/webhook-log.jsonl
+_gate/purchases.php
+_gate/webhook-log.php
