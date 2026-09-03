@@ -1,0 +1,21 @@
+# heavy generated/source assets — not tracked, already live on server separately
+viewer/*_files/
+viewer/*.dzi
+viewer/_build_*.json
+viewer/_build_summary.json
+01 Urbano Monte 1587/
+02 Fra Mauro 1450/
+03 Borgia Map 1430/
+04 Carta Marina 1539/
+05 Ebstorf Map 1300/
+06 Waldseemuller 1507/
+07 Al-Idrisi Tabula Rogeriana 1154/
+08 Cantino Planisphere 1502/
+09 Piri Reis 1513/
+09 Ptolemy 1482 Ulm/
+10 Mercator 1569/
+
+# secrets / runtime data
+_gate/config.php
+_gate/purchases.json
+_gate/webhook-log.jsonl
