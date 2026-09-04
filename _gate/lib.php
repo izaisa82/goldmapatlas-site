@@ -135,24 +135,72 @@ function gma_render_gate(string $title, string $description, ?string $error = nu
 <?php
 }
 
+// Shown when the visitor already has a valid login cookie, but the email on that
+// cookie does not own THIS particular product. Distinct from gma_render_gate()
+// (which is for "never logged in" / "wrong email typed") so the buyer isn't
+// confused into thinking their login failed when really they just haven't bought
+// this map yet.
+function gma_render_wrong_product(string $title, string $email): void {
+    ?>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title><?= htmlspecialchars($title) ?> — GoldMapAtlas</title>
+<style>
+  body{font-family:Georgia,'Times New Roman',serif;background:#1b1712;color:#eee6d6;display:flex;min-height:100vh;align-items:center;justify-content:center;margin:0;padding:24px;}
+  .card{max-width:440px;width:100%;background:#26201a;border:1px solid #4a3d2c;border-radius:10px;padding:32px;text-align:center;}
+  h1{font-size:1.3rem;margin:0 0 10px;color:#e8d9b5;}
+  p{color:#c9bda3;line-height:1.55;font-size:0.95rem;margin:0 0 8px;}
+  .email{color:#e0a86d;font-weight:600;}
+  .btn{display:inline-block;width:100%;box-sizing:border-box;padding:11px;border-radius:6px;border:none;background:#c9a44c;color:#1b1712;font-weight:bold;font-size:1rem;text-decoration:none;margin-top:16px;}
+  .btn:hover{background:#dab65e;}
+  .switch{display:block;margin-top:14px;color:#a29684;font-size:0.85rem;text-decoration:none;}
+  .switch:hover{color:#eee6d6;text-decoration:underline;}
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1><?= htmlspecialchars($title) ?></h1>
+    <p>You're logged in as <span class="email"><?= htmlspecialchars($email) ?></span>, but this map isn't part of your purchase.</p>
+    <p>Grab it (or upgrade to All-Access) from the shop to unlock it.</p>
+    <a class="btn" href="https://goldmapatlas.com/viewer/index.html">Visit the Shop</a>
+    <a class="switch" href="?switch=1">Not you? Use a different email</a>
+  </div>
+</body>
+</html>
+<?php
+}
+
 function gma_gate(array $requiredAnyOf, string $title): void {
     $existingEmail = gma_email_from_cookie();
     if ($existingEmail && gma_has_access($existingEmail, $requiredAnyOf)) {
         return;
     }
+
+    $switchEmail = isset($_GET['switch']);
     $error = null;
+
     if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
         $email = trim($_POST['email'] ?? '');
         if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $error = 'Please enter a valid email address.';
         } elseif (gma_has_access($email, $requiredAnyOf)) {
             gma_issue_cookie($email);
-            header('Location: ' . $_SERVER['REQUEST_URI']);
+            header('Location: ' . strtok($_SERVER['REQUEST_URI'], '?'));
             exit;
         } else {
             $error = "We couldn't find a purchase under that email. Please use the email you paid with.";
         }
+    } elseif ($existingEmail && !$switchEmail) {
+        // Already logged in as someone, just not someone who bought THIS product.
+        // Show a clear "not included in your purchase" screen instead of a blank
+        // re-login form, so it doesn't read like their login failed.
+        gma_render_wrong_product($title, $existingEmail);
+        exit;
     }
+
     gma_render_gate($title, 'Enter the email you used to purchase to unlock this map.', $error);
     exit;
 }
