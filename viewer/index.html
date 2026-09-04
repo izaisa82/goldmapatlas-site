@@ -90,6 +90,14 @@
   .caveat{margin:0;font-size:11.5px;line-height:1.45;color:#8b7f6e;font-style:italic}
   .open{font-size:12px;color:var(--accent);font-weight:600;margin-top:2px}
   .open::after{content:" \2192"}
+  a.card.owned{border-color:var(--accent);box-shadow:0 0 0 1px rgba(224,168,109,.45),0 8px 30px rgba(0,0,0,.45)}
+  a.card.owned .no{color:var(--accent)}
+  a.card.owned .open{color:#9ecf9a}
+  a.card.owned .open::after{content:" \2713"}
+  a.card.locked{filter:grayscale(.8) brightness(.6);opacity:.68}
+  a.card.locked:hover{filter:grayscale(.55) brightness(.75);opacity:.85;transform:none}
+  a.card.locked .open{color:var(--muted)}
+  a.card.locked .open::after{content:""}
 
   /* ---------- footer ---------- */
   footer{border-top:1px solid var(--line);padding:26px 0 52px;color:var(--muted);font-size:12.5px}
@@ -272,6 +280,7 @@
     var a = document.createElement("a");
     a.className = "card";
     a.href = "viewer.php#m=" + encodeURIComponent(r.id);
+    a.dataset.id = r.id;
 
     // Static file built once by gen_thumbs.py from this map's own tile pyramid.
     // Nothing is generated per page load; width/height are stamped so the grid does
@@ -312,6 +321,47 @@
   } else if (!(window.MAP_DATA || []).length) {
     document.getElementById("fallback").style.display = "block";
   }
+
+  // Show buyers which maps are already theirs. Cosmetic only - the actual access
+  // check still happens server-side in _gate/lib.php when a card is opened, so a
+  // tampered class here can't unlock anything.
+  var ROSTER_KOD = {
+    "waldseemuller": "waldseemuller-viewer",
+    "alidrisi": "al-idrisi-viewer",
+    "ptolemy": "ptolemy-viewer",
+    "cartamarina": "carta-marina-viewer",
+    "borgia": "borgia-viewer",
+    "ebstorf": "ebstorf-viewer",
+    "cantino": "cantino-viewer",
+    "mercator": "mercator-viewer",
+    "urbano-monte": "urbano-monte-viewer",
+    "framauro-rumsey": "fra-mauro-viewer"
+  };
+
+  fetch("../_gate/whoami.php", { credentials: "same-origin" })
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (who) {
+      // Nobody logged in yet on this browser - leave every card in its neutral state
+      // rather than showing everything as "locked", which would just look broken.
+      if (!who || !who.loggedIn) return;
+      var owned = who.owned || [];
+      var hasAll = owned.indexOf("all-access") !== -1;
+      ROSTER.forEach(function (r) {
+        var card = grid.querySelector('a.card[data-id="' + r.id + '"]');
+        if (!card) return;
+        var kod = ROSTER_KOD[r.id];
+        var isOwned = hasAll || (kod && owned.indexOf(kod) !== -1);
+        if (isOwned) {
+          card.classList.add("owned");
+        } else {
+          card.classList.add("locked");
+          var openSpan = card.querySelector(".open");
+          if (openSpan) openSpan.textContent = "Not purchased";
+        }
+      });
+    })
+    .catch(function () { /* offline or blocked - cards just stay neutral */ });
+
 })();
 </script>
 </body>
