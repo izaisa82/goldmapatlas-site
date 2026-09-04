@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>GoldMapAtlas — Explore History's Greatest Maps in Extreme Detail</title>
+
+<!-- Card facts (title, era, resolution) are read from maps.js at runtime where possible,
+     so the numbers on this page cannot drift away from the numbers the tiler actually
+     produced. ROSTER below carries only what maps.js does not hold: the display order,
+     the display name, and the one-line hook. -->
+<script src="maps.js"></script>
+
+<style>
+  :root{
+    --bg:#14110e; --panel:rgba(28,24,20,.86); --line:rgba(230,215,190,.16);
+    --ink:#efe6d7; --muted:#a29684; --accent:#e0a86d; --card:rgba(32,27,22,.72);
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:16px/1.55 ui-sans-serif,system-ui,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    background-image:radial-gradient(120% 70% at 50% -10%,rgba(224,168,109,.10),transparent 60%);
+    background-repeat:no-repeat}
+  .wrap{max-width:1160px;margin:0 auto;padding:0 20px}
+
+  /* ---------- hero ---------- */
+  header{padding:clamp(44px,9vw,96px) 0 clamp(28px,5vw,44px);text-align:center}
+  .kicker{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--accent);
+    margin:0 0 18px;font-weight:600}
+  h1{margin:0 0 18px;font-weight:600;letter-spacing:-.01em;line-height:1.15;
+    font-size:clamp(27px,5.2vw,50px);
+    font-family:Georgia,"Iowan Old Style","Times New Roman",serif}
+  h1 .em{color:var(--accent)}
+  .tagline{margin:0 auto;max-width:660px;color:var(--muted);
+    font-size:clamp(15px,2.1vw,19px);line-height:1.6}
+  .cta{margin-top:30px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+  .enter{display:inline-block;background:var(--accent);color:#1d1509;text-decoration:none;
+    font-weight:600;font-size:15px;padding:13px 26px;border-radius:10px;
+    transition:transform .12s,filter .12s}
+  .enter:hover{filter:brightness(1.08)}
+  .enter:active{transform:scale(.97)}
+  .enter.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+  .enter.ghost:hover{border-color:rgba(230,215,190,.4);filter:none}
+
+  /* ---------- how it works ---------- */
+  .how{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;
+    margin:clamp(24px,4vw,40px) 0 clamp(30px,5vw,52px)}
+  .how div{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+  .how b{display:block;color:var(--accent);font-size:11px;letter-spacing:.13em;
+    text-transform:uppercase;margin-bottom:6px;font-weight:600}
+  .how p{margin:0;font-size:13.5px;color:var(--muted);line-height:1.5}
+
+  /* ---------- roster ---------- */
+  .sect{display:flex;align-items:baseline;gap:14px;margin:0 0 18px}
+  .sect h2{margin:0;font-size:15px;font-weight:600;letter-spacing:.02em}
+  .sect span{font-size:12.5px;color:var(--muted)}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:56px}
+
+  a.card{display:flex;flex-direction:column;gap:9px;text-decoration:none;color:inherit;
+    background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:14px 18px 16px;transition:border-color .15s,transform .15s,background .15s}
+
+  /* Fixed-height letterbox. object-fit:contain keeps each map's own aspect ratio - a
+     2.42:1 al-Idrisi and a 0.77:1 Mercator sheet both sit whole inside the same box
+     rather than being square-cropped, which would cut content off the wide ones. */
+  /* --thumbH is applied to the box AND to the image. A flex item defaults to
+     min-height:auto, so without both the box grows to the image's intrinsic height and
+     the letterbox does nothing. */
+  .thumb{--thumbH:172px;position:relative;height:var(--thumbH);flex:0 0 var(--thumbH);
+    min-height:0;margin:0 0 3px;border-radius:9px;overflow:hidden;
+    background:#0e0c0a;border:1px solid rgba(230,215,190,.10);
+    display:grid;place-items:center}
+  .thumb img{max-width:100%;max-height:var(--thumbH);width:auto;height:auto;
+    object-fit:contain;display:block;transition:transform .35s ease}
+  a.card:hover .thumb img{transform:scale(1.035)}
+  a.card:hover{border-color:rgba(224,168,109,.55);background:rgba(40,33,26,.8);transform:translateY(-2px)}
+  a.card:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+  .card .no{font-size:10.5px;letter-spacing:.14em;color:var(--muted);
+    font-variant-numeric:tabular-nums}
+  .card h3{margin:0;font-size:17px;font-weight:600;line-height:1.25;
+    font-family:Georgia,"Iowan Old Style","Times New Roman",serif}
+  .meta{display:flex;flex-wrap:wrap;gap:7px;align-items:center}
+  .chip{font-size:11px;padding:3px 9px;border-radius:999px;border:1px solid var(--line);
+    color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .chip.res{color:var(--accent);border-color:rgba(224,168,109,.35)}
+  .hook{margin:0;font-size:13.5px;line-height:1.5;color:var(--muted);flex:1}
+  .caveat{margin:0;font-size:11.5px;line-height:1.45;color:#8b7f6e;font-style:italic}
+  .open{font-size:12px;color:var(--accent);font-weight:600;margin-top:2px}
+  .open::after{content:" \2192"}
+
+  /* ---------- footer ---------- */
+  footer{border-top:1px solid var(--line);padding:26px 0 52px;color:var(--muted);font-size:12.5px}
+  footer p{margin:0 0 9px;max-width:760px;line-height:1.6}
+  footer p:last-child{margin-bottom:0}
+
+  @media (max-width:900px){ .grid,.how{grid-template-columns:repeat(2,1fr)} }
+  @media (max-width:600px){
+    .wrap{padding:0 16px}
+    /* let the title wrap where it fits rather than at the desktop break point */
+    h1 br.nb{display:none}
+    .grid,.how{grid-template-columns:1fr;gap:12px}
+    .grid{margin-bottom:40px}
+    a.card{padding:16px}
+    .cta{flex-direction:column;align-items:stretch}
+    .enter{text-align:center}
+    .sect{flex-direction:column;gap:3px}
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header>
+    <p class="kicker">All-Access Bundle</p>
+    <h1>GoldMapAtlas — Explore History's<br class="nb"> Greatest Maps in <span class="em">Extreme Detail</span></h1>
+    <p class="tagline" id="tagline">Ten of history&rsquo;s great world maps in one clean, fast, mobile-friendly
+      place &mdash; instead of hunting them down one site at a time.</p>
+    <div class="cta">
+      <a class="enter" href="viewer.php">Open the viewer</a>
+      <a class="enter ghost" href="#roster">See the ten maps</a>
+    </div>
+  </header>
+
+  <section class="how" aria-label="How it works">
+    <div>
+      <b>Zoom to the brushstroke</b>
+      <p>Every map is served as a deep-zoom tile pyramid, so you can go from the whole
+         world to a single inked coastline without waiting for a huge file to download.</p>
+    </div>
+    <div>
+      <b>One place, ten maps</b>
+      <p>Switch between them from a single viewer. No separate downloads, no separate
+         accounts, no hunting for the high-resolution version.</p>
+    </div>
+    <div>
+      <b>Works on your phone</b>
+      <p>The viewer runs in any modern browser and pinch-zooms on a phone. A larger
+         screen is still where these maps come alive.</p>
+    </div>
+  </section>
+
+  <section id="roster">
+    <div class="sect">
+      <h2>The ten maps</h2>
+      <span>Tap any card to open it directly in the viewer.</span>
+    </div>
+    <div class="grid" id="grid"></div>
+  </section>
+
+  <footer>
+    <p id="fallback" style="display:none;color:#e0a86d">
+      Map details could not be loaded. Serve this folder over http (XAMPP) rather than
+      opening it as a <code>file://</code> URL.</p>
+    <p>Full source, date and licence details are shown beside each map inside the viewer.</p>
+    <p>Two of the ten &mdash; Urbano Monte and the Ultra HD Fra Mauro &mdash; are used by written
+       permission rather than being public domain, and are marked as such on their cards and
+       in the viewer.</p>
+    <p>GoldMapAtlas &middot; AlexSaaraCo. For personal use by the purchaser. Please do not
+       redistribute the files or share this page.</p>
+  </footer>
+
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // An existing deep link (#m=<id>&x=&y=&z=) was written by the viewer, not by this
+  // landing page. Hand it straight back to the viewer so links shared or bookmarked
+  // before this page existed still land exactly where they used to.
+  if (/(^|[#&])m=/.test(location.hash)) {
+    location.replace("viewer.php" + location.hash);
+    return;
+  }
+
+  // Display order is deliberate and is NOT maps.js order: the eight maps gathered from
+  // many different holdings come first, then the two that share one source.
+  var ROSTER = [
+    { id: "waldseemuller", alt: "Twelve-sheet woodcut world map laid out in a 4x3 grid, sepia line engraving, decorative borders top and bottom.", name: "Waldseemüller World Map", year: "1507",
+      hook: "The first map ever printed that put the name America on the New World. Only one copy is known to survive." },
+    { id: "alidrisi", alt: "Very wide south-up world map, cream landmasses against deep blue seas, red route lines.", name: "al-Idrisi &middot; Tabula Rogeriana", year: "1154",
+      hook: "The world as read from 12th-century Palermo, compiled for King Roger II of Sicily — and drawn with south at the top.",
+      caveat: "Shown as the 19th-century engraved reproduction, not the 1154 manuscript." },
+    { id: "ptolemy", alt: "Hand-coloured woodcut world map across a bound double page, ringed by wind-head faces.", name: "Ptolemy's World Map", year: "1482",
+      hook: "The classical picture of the world, cut in woodblock and hand-coloured, ringed by twelve wind-heads.",
+      caveat: "The 1482 Ulm printing, after Nicolaus Germanus — the 2nd-century original does not survive." },
+    { id: "cartamarina", alt: "Wide monochrome chart of Scandinavia and the northern seas, dense with sea monsters, ships and compass roses.", name: "Carta Marina", year: "1539",
+      hook: "Olaus Magnus's chart of the northern seas, where the blank water is filled with sea monsters, whirlpools and wrecks." },
+    { id: "borgia", alt: "Circular engraved world map on a portrait page, south at the top, dense with figures and inscriptions.", name: "Borgia Planisphere", year: "c. 1430",
+      hook: "A pre-Columbus world engraved on metal, oriented with south at the top and crowded with towns, kings and beasts.",
+      caveat: "Shown as the 1797 engraved facsimile of the original plate." },
+    { id: "ebstorf", alt: "Circular medieval mappa mundi in red and ochre, Christ's head at the top, hundreds of small painted scenes.", name: "Ebstorf Mappa Mundi", year: "c. 1300",
+      hook: "The medieval world drawn as the body of Christ, with Jerusalem at its heart. The original was destroyed in 1943.",
+      caveat: "Every surviving image descends from pre-war facsimiles; this is one of them." },
+    { id: "cantino", alt: "Wide portolan planisphere, green and gold coastlines, compass roses and red place-names on cream vellum.", name: "Cantino Planisphere", year: "1502",
+      hook: "Carried out of Lisbon in 1502 with Portugal's newest coastlines on it — one of the earliest charts to show Brazil." },
+    { id: "mercator", alt: "Sheet of a large engraved wall map: title banner across the top, North Atlantic coastlines, compass rose with rhumb lines.", name: "Mercator World Map", year: "1569",
+      hook: "The projection that made ocean navigation practical, in the original large-format sheets.",
+      caveat: "Shown as 14 separate sheets, as scanned — not stitched into one image. Pictured: sheet 03." },
+    { id: "urbano-monte", alt: "Circular polar world map with a scalloped blue border and four decorative roundels in the corners of a dark frame.", name: "Urbano Monte Planisphere", year: "1587",
+      hook: "Sixty hand-drawn manuscript sheets assembled into a single north-polar planisphere — the largest map of its century.",
+      licensed: true },
+    { id: "framauro-rumsey", alt: "Large circular world map in sepia line work, south at the top, surrounded by blocks of handwritten text.", name: "Fra Mauro Mappa Mundi (Ultra HD)", year: "c. 1450",
+      hook: "The last great medieval world map, made in Venice just as Europe's picture of the world was about to be redrawn.",
+      licensed: true }
+  ];
+
+  // intrinsic sizes of the static thumbnails, from thumbs/_thumbs.json
+  var THUMBS = {
+    "waldseemuller": {
+      "w": 520,
+      "h": 289
+    },
+    "alidrisi": {
+      "w": 520,
+      "h": 215
+    },
+    "ptolemy": {
+      "w": 520,
+      "h": 377
+    },
+    "cartamarina": {
+      "w": 520,
+      "h": 387
+    },
+    "borgia": {
+      "w": 422,
+      "h": 520
+    },
+    "ebstorf": {
+      "w": 520,
+      "h": 516
+    },
+    "cantino": {
+      "w": 520,
+      "h": 244
+    },
+    "mercator": {
+      "w": 398,
+      "h": 520
+    },
+    "urbano-monte": {
+      "w": 519,
+      "h": 520
+    },
+    "framauro-rumsey": {
+      "w": 520,
+      "h": 500
+    }
+  };
+
+  var DATA = {};
+  (window.MAP_DATA || []).forEach(function (m) { DATA[m.id] = m; });
+
+  function res(m) {
+    if (!m || typeof m.mp !== "number") return null;
+    return m.mp >= 1000 ? (m.mp / 1000).toFixed(2) + " gigapixels"
+                        : Math.round(m.mp) + " megapixels";
+  }
+
+  var grid = document.getElementById("grid");
+  var missing = [];
+
+  ROSTER.forEach(function (r, i) {
+    var m = DATA[r.id];
+    if (!m) missing.push(r.id);
+
+    var a = document.createElement("a");
+    a.className = "card";
+    a.href = "viewer.php#m=" + encodeURIComponent(r.id);
+
+    // Static file built once by gen_thumbs.py from this map's own tile pyramid.
+    // Nothing is generated per page load; width/height are stamped so the grid does
+    // not reflow as the images arrive.
+    var t = THUMBS[r.id] || {};
+    var html = '<span class="thumb"><img src="thumbs/' + r.id + '.jpg" alt="' +
+                 r.alt + '" loading="lazy" decoding="async"' +
+                 (t.w ? ' width="' + t.w + '" height="' + t.h + '"' : "") + "></span>" +
+               '<span class="no">' + (i < 9 ? "0" : "") + (i + 1) + "</span>" +
+               "<h3>" + r.name + "</h3>" +
+               '<div class="meta"><span class="chip">' + r.year + "</span>";
+
+    var rr = res(m);
+    if (rr) html += '<span class="chip res">' + rr + "</span>";
+    if (m && m.sheets && m.sheets.length) {
+      html += '<span class="chip">' + m.sheets.length + " sheets</span>";
+    }
+    if (r.licensed) html += '<span class="chip">used by permission</span>';
+    html += "</div>";
+
+    html += '<p class="hook">' + r.hook + "</p>";
+    if (r.caveat) html += '<p class="caveat">' + r.caveat + "</p>";
+    html += '<span class="open">Open in viewer</span>';
+
+    a.innerHTML = html;
+    a.setAttribute("aria-label", "Open " + a.textContent.replace(/\s+/g, " ").trim() +
+                                 " in the viewer");
+    grid.appendChild(a);
+  });
+
+  if (missing.length) {
+    // A roster id with no matching record in maps.js would produce a card that opens the
+    // viewer on its default map instead of the one the buyer clicked. Say so loudly.
+    var f = document.getElementById("fallback");
+    f.textContent = "Configuration problem: no map data found for " + missing.join(", ") +
+                    ". These cards may not open the map you expect.";
+    f.style.display = "block";
+  } else if (!(window.MAP_DATA || []).length) {
+    document.getElementById("fallback").style.display = "block";
+  }
+})();
+</script>
+</body>
+</html>
