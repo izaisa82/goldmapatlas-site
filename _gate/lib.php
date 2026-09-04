@@ -100,7 +100,7 @@ function gma_email_from_cookie(): ?string {
     return $email;
 }
 
-function gma_render_gate(string $title, string $description, ?string $error = null): void {
+function gma_render_gate(string $title, string $description, ?string $error = null, bool $showBack = false): void {
     ?>
 <!doctype html>
 <html lang="en">
@@ -117,6 +117,8 @@ function gma_render_gate(string $title, string $description, ?string $error = nu
   button{width:100%;padding:11px;border-radius:6px;border:none;background:#c9a44c;color:#1b1712;font-weight:bold;font-size:1rem;cursor:pointer;}
   button:hover{background:#dab65e;}
   .err{background:#3a1f1f;border:1px solid #7a3b3b;color:#f2c6c6;padding:10px 12px;border-radius:6px;font-size:0.9rem;margin-bottom:10px;}
+  .back{display:block;text-align:center;margin-top:14px;color:#a29684;font-size:0.85rem;text-decoration:none;cursor:pointer;}
+  .back:hover{color:#eee6d6;text-decoration:underline;}
 </style>
 </head>
 <body>
@@ -129,6 +131,7 @@ function gma_render_gate(string $title, string $description, ?string $error = nu
       <button type="submit">Access My Map</button>
     </form>
     <p style="font-size:0.8rem;opacity:0.7;margin-top:16px;">Just purchased? It can take a minute for your access to activate. Try again shortly, or check the confirmation email we sent.</p>
+    <?php if ($showBack): ?><a class="back" onclick="history.back();return false;" href="javascript:void(0)">← Never mind, take me back</a><?php endif; ?>
   </div>
 </body>
 </html>
@@ -201,6 +204,6 @@ function gma_gate(array $requiredAnyOf, string $title): void {
         exit;
     }
 
-    gma_render_gate($title, 'Enter the email you used to purchase to unlock this map.', $error);
+    gma_render_gate($title, 'Enter the email you used to purchase to unlock this map.', $error, $switchEmail);
     exit;
 }
