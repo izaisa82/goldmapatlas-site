@@ -338,6 +338,24 @@
     "framauro-rumsey": "fra-mauro-viewer"
   };
 
+  // Maps a ROSTER id to its folder slug under /individual-viewers/. Needed because a
+  // buyer who owns only ONE map (not the all-access bundle) should be sent straight to
+  // that map's own single-map viewer, not to the bundle viewer.php (which requires
+  // all-access and would incorrectly show the "wrong product" screen even though this
+  // buyer legitimately owns the map).
+  var ROSTER_ID_TO_SLUG = {
+    "waldseemuller": "waldseemuller",
+    "alidrisi": "al-idrisi",
+    "ptolemy": "ptolemy",
+    "cartamarina": "carta-marina",
+    "borgia": "borgia",
+    "ebstorf": "ebstorf",
+    "cantino": "cantino",
+    "mercator": "mercator",
+    "urbano-monte": "urbano-monte",
+    "framauro-rumsey": "fra-mauro"
+  };
+
   fetch("../_gate/whoami.php", { credentials: "same-origin" })
     .then(function (r) { return r.ok ? r.json() : null; })
     .then(function (who) {
@@ -350,9 +368,17 @@
         var card = grid.querySelector('a.card[data-id="' + r.id + '"]');
         if (!card) return;
         var kod = ROSTER_KOD[r.id];
-        var isOwned = hasAll || (kod && owned.indexOf(kod) !== -1);
+        var ownsIndividual = kod && owned.indexOf(kod) !== -1;
+        var isOwned = hasAll || ownsIndividual;
         if (isOwned) {
           card.classList.add("owned");
+          // Only bundle (all-access) owners should land in the multi-map viewer.php.
+          // A buyer who owns just this one map goes straight to its single-map viewer,
+          // which also accepts the individual kod, so the "owned" card actually opens.
+          if (!hasAll && ownsIndividual) {
+            var slug = ROSTER_ID_TO_SLUG[r.id];
+            if (slug) card.href = "../individual-viewers/" + slug + "/";
+          }
         } else {
           card.classList.add("locked");
           var openSpan = card.querySelector(".open");
